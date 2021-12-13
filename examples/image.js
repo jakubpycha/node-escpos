@@ -1,6 +1,7 @@
 'use strict';
 const path = require('path');
-const escpos = require('../');
+const escpos = require('../packages/printer');
+escpos.USB = require('../packages/usb');
 
 const device  = new escpos.USB();
 const printer = new escpos.Printer(device);
