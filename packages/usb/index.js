@@ -25,7 +25,7 @@ const IFACE_CLASS = {
 function USB(vid, pid){
 
   if (!usb) {
-    usb = require('usb');
+    usb = require('usb').usb;
   }
 
   EventEmitter.call(this);
@@ -67,7 +67,7 @@ function USB(vid, pid){
  */
 USB.findPrinter = function(){
   if (!usb) {
-    usb = require('usb');
+    usb = require('usb').usb;
   }
   return usb.getDeviceList().filter(function(device){
     try{
@@ -128,8 +128,12 @@ USB.prototype.open = function (callback){
             if(endpoint.direction == 'out' && !self.endpoint) {
               self.endpoint = endpoint;
             }
+            if(endpoint.direction == 'in' && !self.inEndpoint) {
+              self.inEndpoint = endpoint;
+            }
           });
-          if(self.endpoint) {
+          if(self.endpoint  && self.inEndpoint) {
+            self.inEndpoint.startPoll(3);
             self.emit('connect', self.device);
             callback && callback(null, self);
           } else if(++counter === this.device.interfaces.length && !self.endpoint){
@@ -159,12 +163,29 @@ USB.prototype.write = function(data, callback){
   return this;
 };
 
+/**
+ * Read data from USB
+ * @param  {Function} callback
+ * @return {USB}
+ */
+USB.prototype.read = function(callback) {
+  const dataHandler = (data) => {
+    callback(data);
+    this.inEndpoint.removeListener('data', dataHandler);
+  };
+  this.inEndpoint.on('data', dataHandler);
+  return this;
+}
+
 USB.prototype.close = function(callback){
 
   if(this.device) {
 
     try {
-
+      this.inEndpoint.stopPoll(err=> {
+        // do nothing
+      })
+      this.inEndpoint.removeAllListeners();
       this.device.close();
       usb.removeAllListeners('detach');
 
