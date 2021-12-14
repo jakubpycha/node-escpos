@@ -133,7 +133,10 @@ USB.prototype.open = function (callback){
             }
           });
           if(self.endpoint  && self.inEndpoint) {
-            self.inEndpoint.startPoll(3);
+            self.inEndpoint.startPoll(1);
+            self.inEndpoint.on('data', (data)=> {
+              console.debug(`IN: ${data.toString('hex')}`);
+            });
             self.emit('connect', self.device);
             callback && callback(null, self);
           } else if(++counter === this.device.interfaces.length && !self.endpoint){
@@ -158,6 +161,7 @@ USB.prototype.open = function (callback){
  * @return {[type]}      [description]
  */
 USB.prototype.write = function(data, callback){
+  console.debug(`OUT: ${Buffer.from(data).toString('hex')}`);
   this.emit('data', data);
   this.endpoint.transfer(data, callback);
   return this;
