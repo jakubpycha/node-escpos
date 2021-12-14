@@ -307,9 +307,66 @@ class RollPaperSensorStatus extends DeviceStatus {
   }
 }
 
+
+class ExternalSensorStatus extends DeviceStatus {
+  static commands() {
+    return [_.DLE, _.EOT, String.fromCharCode(5)];
+  }
+
+  static getClassName() {
+    return 'ExternalSensorStatus';
+  }
+
+  toJSON() {
+    let result = super.toJSON();
+
+
+
+    for (let i = 0; i < 8; i++) {
+     
+      const res = {bit: i, value: this.bitsAsc[i]};
+      let status = 'ok';
+      let label = 'External sensor status normal';
+      if(i === 0) {
+        if(res.value !== 0) {
+          status = 'error';
+          label = 'Paper blocked';
+        }
+      }
+
+      if(i === 1) {
+        if(res.value !== 0) {
+          status = 'error';
+          label = 'Dragging ticket';
+        }
+      }
+
+      if(i === 2) {
+        if(res.value !== 0) {
+          status = 'error';
+          label = 'Ticket out or ticket out sensor is invalid';
+        }
+      }
+
+      if(i > 2) {
+        label = 'unused';
+      }
+
+      result.statuses.push({
+        ...res,
+        label,
+        status
+      });
+    }
+
+    return result;
+  }
+}
+
 module.exports = {
   PrinterStatus: PrinterStatus,
   OfflineCauseStatus: OfflineCauseStatus,
   ErrorCauseStatus: ErrorCauseStatus,
   RollPaperSensorStatus: RollPaperSensorStatus,
+  ExternalSensorStatus: ExternalSensorStatus
 };
