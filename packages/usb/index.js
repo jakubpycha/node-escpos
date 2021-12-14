@@ -32,7 +32,7 @@ function USB(vid, pid){
   var self = this;
   this.device = null;
   if(vid && pid){
-    this.device = usb.findByIds(vid, pid);
+    this.device = require('usb').findByIds(vid, pid);
   }else if(vid){
       // Set spesific USB device from devices array as coming from USB.findPrinter() function.
       // for example
